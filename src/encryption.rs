@@ -64,7 +64,8 @@ pub fn encrypt_file(input_file_path: &String, password: &String) -> anyhow::Resu
     Ok(duration.as_millis())
 }
 
-fn decrypt_file(input_file_path: &String, password: &String) -> Result<(), anyhow::Error> {
+pub(crate) fn decrypt_file(input_file_path: &String, password: &String) -> Result<u128, anyhow::Error> {
+    let start_time = Instant::now();
     let output_file_path = derive_output_file_path(input_file_path);
     let mut salt = [0u8; 32];
     let mut nonce = [0u8; 19];
@@ -117,7 +118,8 @@ fn decrypt_file(input_file_path: &String, password: &String) -> Result<(), anyho
     nonce.zeroize();
     key.zeroize();
 
-    Ok(())
+    let duration = start_time.elapsed();
+    Ok(duration.as_millis())
 }
 
 fn derive_output_file_path(input_file_path: &String) -> String {
@@ -147,16 +149,11 @@ mod tests {
     use std::io::Write;
     use std::ops::Add;
     use std::path::PathBuf;
-    use std::sync::Once;
     use anyhow::anyhow;
-    use log::{debug, info, warn};
-    use crate::{decrypt_file, derive_output_file_path, encrypt_file, replace_old_file_with_temp};
-
-    static INIT: Once = Once::new();
+    use crate::encryption::{decrypt_file, derive_output_file_path, encrypt_file, replace_old_file_with_temp};
 
     #[test]
     fn test_path_derivation() {
-        init_logger_if_not_already_initialized();
         let mut input = String::from("test");
         let result = derive_output_file_path(&input);
         input = input.add(".temp");
@@ -165,8 +162,6 @@ mod tests {
 
     #[test]
     fn test_replace_file() -> Result<(), anyhow::Error> {
-        init_logger_if_not_already_initialized();
-
         let first_file_path = get_current_dir_and_join("first_file.txt")?;
         let second_file_path = get_current_dir_and_join("second_file.txt")?;
 
@@ -191,7 +186,6 @@ mod tests {
 
     #[test]
     fn test_cryptor_operations() -> anyhow::Result<()> {
-        init_logger_if_not_already_initialized();
         let contents = "Hello World";
         let file_path = get_current_dir_and_join("data.txt")?;
         create_file(&file_path, contents.to_string())?;
@@ -210,13 +204,6 @@ mod tests {
         Ok(())
     }
 
-    fn init_logger_if_not_already_initialized() {
-        INIT.call_once(|| {
-            let _ = env_logger::builder().is_test(true).try_init();
-            info!("Logger configured...");
-        })
-    }
-
     fn create_file(file_path: &String, contents: String) -> anyhow::Result<File> {
         let mut file = File::create(file_path)?;
         file.write_all(&contents.as_bytes())?;
@@ -231,7 +218,7 @@ mod tests {
     fn delete_file(path: &String) {
         match fs::remove_file(path) {
             Ok(_) => {}
-            Err(err) => { warn!("Could not delete file {}", err); }
+            Err(err) => { println!("Could not delete file {}", err) }
         }
     }
 }
