@@ -3,11 +3,12 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::ops::Add;
 use std::time::{Duration, Instant};
+
 use anyhow::anyhow;
 use argon2::Config;
+use chacha20poly1305::{KeyInit, XChaCha20Poly1305};
 use chacha20poly1305::aead::{OsRng, stream};
 use chacha20poly1305::aead::rand_core::RngCore;
-use chacha20poly1305::{KeyInit, XChaCha20Poly1305};
 use log::trace;
 use zeroize::Zeroize;
 
@@ -148,9 +149,11 @@ mod tests {
     use std::ops::Add;
     use std::path::PathBuf;
     use std::sync::Once;
+
     use anyhow::anyhow;
     use env_logger::Builder;
     use log::{debug, error, info, LevelFilter, trace};
+
     use crate::encryption::{argon2_config, decrypt_file, derive_output_file_path, encrypt_file, replace_old_file_with_temp};
 
     const INIT: Once = Once::new();
@@ -226,7 +229,7 @@ mod tests {
     fn delete_file(path: &String) {
         match fs::remove_file(path) {
             Ok(_) => { debug!("Deleted file {}", path); }
-            Err(err) => { error!("Could not delete file {}", err) }
+            Err(err) => { error!("Could not delete file {}: {}",path, err) }
         }
     }
 
