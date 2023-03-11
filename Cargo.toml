@@ -13,5 +13,8 @@ anyhow = "1.0.69"
 zeroize = "1.5.7"
 rand = "0.8.5"
 clap = { version = "4.1.8", features = ["derive"] }
+clap-verbosity-flag = "2.0.0"
 rpassword = "7.2.0"
 walkdir = "2.3.2"
+log = "0.4.17"
+env_logger = "0.10.0"

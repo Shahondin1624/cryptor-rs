@@ -3,13 +3,16 @@ use std::path::Path;
 use clap::{Parser};
 
 #[derive(Debug, Parser, Clone)]
-#[clap(author, version, about)]
+#[clap(author = "Shahondin1624", about = "A simple cli-application for en-/decrypting files")]
 pub struct CryptorArguments {
     ///The file or root-folder from where to start the crypt-operation
     pub root_file_path: String,
     ///Whether all files should be de-/encrypted
     #[clap(value_enum)]
     pub mode: CryptMode,
+    ///Whether the logging should be verbose or not
+    #[clap(flatten)]
+    pub verbose: clap_verbosity_flag::Verbosity,
 }
 
 #[derive(Debug, clap::ValueEnum, Clone, Copy)]
@@ -35,6 +38,7 @@ pub struct CryptorArgumentsWithPassword {
     pub root_file_path: String,
     pub mode: CryptMode,
     pub password: String,
+    pub verbose: clap_verbosity_flag::Verbosity,
 }
 
 impl CryptorArgumentsWithPassword {
@@ -42,7 +46,8 @@ impl CryptorArgumentsWithPassword {
         CryptorArgumentsWithPassword {
             root_file_path: arguments.root_file_path,
             mode: arguments.mode,
-            password: pwd
+            password: pwd,
+            verbose: arguments.verbose,
         }
     }
 
