@@ -177,7 +177,7 @@ mod tests {
         replace_old_file_with_temp(&first_file_path, &second_file_path)?;
         debug!("Replaced first file with temporary file");
         let text = fs::read_to_string(&first_file_path)?;
-        trace!("Contents of file: {}", &text);
+        trace!("Contents of file: '{}'", &text);
         assert_eq!(contents, text);
         delete_file(&first_file_path);
         delete_file(&second_file_path);
@@ -199,13 +199,13 @@ mod tests {
         let password = "password".to_string();
         let argon2config = argon2_config();
         trace!("Attempting to encrypt the test file...");
-        encrypt_file(&file_path, &password, &argon2config)?;
-        debug!("Encrypted the test file");
+        let duration = encrypt_file(&file_path, &password, &argon2config).unwrap();
+        debug!("Encrypted the test file in {:?}", duration);
         trace!("Attempting to decrypt the test file...");
-        decrypt_file(&file_path, &password, &argon2config)?;
-        debug!("Decrypted the test file");
+        let duration = decrypt_file(&file_path, &password, &argon2config).unwrap();
+        debug!("Decrypted the test file in {:?}", duration);
         let decrypted = fs::read_to_string(&file_path)?;
-        trace!("Decrypted contents are: {}", &decrypted);
+        trace!("Decrypted contents are: '{}'", &decrypted);
         assert_eq!(contents, decrypted);
         delete_file(&file_path);
         Ok(())
@@ -214,6 +214,7 @@ mod tests {
     fn create_file(file_path: &String, contents: String) -> anyhow::Result<File> {
         let mut file = File::create(file_path)?;
         file.write_all(&contents.as_bytes())?;
+        trace!("Wrote '{}' to {}", contents, file_path);
         Ok(file)
     }
 
