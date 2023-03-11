@@ -4,6 +4,7 @@ use std::fs;
 use std::path::Path;
 use std::time::{Duration, Instant};
 
+use atomic_counter::{AtomicCounter, RelaxedCounter};
 use clap::Parser;
 use env_logger::Builder;
 use log::{debug, error, info, warn};
@@ -65,8 +66,10 @@ fn perform_operation_on_files(args: CryptorArgumentsWithPassword, operable_files
     let start_time = Instant::now();
     info!("Beginning encryption...");
     let argon2_config = encryption::argon2_config();
+    let counter = RelaxedCounter::new(0);
     operable_files.par_iter().for_each(|entry| {
         let path = entry.path().to_string_lossy().to_string();
+        debug!("{}/{} files already encrypted", counter.get(), operable_files.len());
         match args.mode {
             CryptMode::Encryption => {
                 debug!("Attempting to encrypt {}", &path);
@@ -83,6 +86,7 @@ fn perform_operation_on_files(args: CryptorArgumentsWithPassword, operable_files
                 }
             }
         }
+        counter.inc();
     });
     start_time.elapsed()
 }
